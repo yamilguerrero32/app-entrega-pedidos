@@ -9,13 +9,15 @@ import {
 } from "react-native";
 
 import * as Location from "expo-location";
+import MapView, { Circle, Marker } from "react-native-maps";
+import { FontAwesome5 } from "@expo/vector-icons";
 
 export default function HomeScreen() {
   // Datos provisionales del pedido
   const pedido = {
-    folio: "1025",
-    cliente: "Juan Pérez",
-    direccion: "Av. Independencia #245",
+    folio: "1032",
+    cliente: "Yamil Guerrero",
+    direccion: "5 de Febrero 50, Anahuac, CP: 81280 Los Mochis, Sin.",
     estado: "En camino",
   };
 
@@ -219,30 +221,64 @@ export default function HomeScreen() {
         <Text style={styles.label}>Estado</Text>
         <Text style={styles.estado}>{pedido.estado}</Text>
 
-        <View style={styles.divisor} />
+        <Text style={[styles.seccion, { marginTop: 25, marginBottom: 15 }]}>
+          Ubicación del pedido
+        </Text>
 
-        <Text style={styles.seccion}>Ubicación del repartidor</Text>
+        <View style={styles.contenedorMapa}>
+          <MapView
+            style={styles.mapa}
+            initialRegion={{
+              latitude: domicilio.latitud,
+              longitude: domicilio.longitud,
+              latitudeDelta: 0.006,
+              longitudeDelta: 0.006,
+            }}
+            showsUserLocation={false}
+            showsMyLocationButton={false}
+            mapType="standard"
+          >
+            {/* Marcador del domicilio */}
+            <Marker
+              coordinate={{
+                latitude: domicilio.latitud,
+                longitude: domicilio.longitud,
+              }}
+              title="Destino de entrega"
+              description={pedido.direccion}
+              pinColor="red"
+            />
 
-        <Text style={styles.aviso}>{mensaje}</Text>
+            {/* Geocerca de 75 metros */}
+            <Circle
+              center={{
+                latitude: domicilio.latitud,
+                longitude: domicilio.longitud,
+              }}
+              radius={RADIO_ENTREGA}
+              strokeColor="rgba(250, 0, 0, 0.9)"
+              fillColor="rgba(224, 20, 20, 0.43)"
+              strokeWidth={2}
+            />
 
-        {ubicacion && (
-          <View style={styles.coordenadas}>
-            <Text style={styles.label}>Latitud</Text>
-            <Text style={styles.valor}>
-              {ubicacion.coords.latitude.toFixed(6)}
-            </Text>
-
-            <Text style={styles.label}>Longitud</Text>
-            <Text style={styles.valor}>
-              {ubicacion.coords.longitude.toFixed(6)}
-            </Text>
-
-            <Text style={styles.label}>Precisión GPS</Text>
-            <Text style={styles.valor}>
-              {Math.round(ubicacion.coords.accuracy ?? 0)} metros
-            </Text>
-          </View>
-        )}
+            {/* Ubicación actual del repartidor */}
+            {ubicacion && (
+              <Marker
+                coordinate={{
+                  latitude: ubicacion.coords.latitude,
+                  longitude: ubicacion.coords.longitude,
+                }}
+                title="Mi ubicación"
+                description="Ubicación actual del repartidor"
+                anchor={{ x: 0.5, y: 0.5 }}
+              >
+                <View style={styles.marcadorRepartidor}>
+                  <FontAwesome5 name="user" size={20} color="#FFFFFF" />
+                </View>
+              </Marker>
+            )}
+          </MapView>
+        </View>
 
         <View style={styles.divisor} />
 
@@ -293,17 +329,8 @@ export default function HomeScreen() {
             <Text style={styles.valor}>{entrega.longitud.toFixed(6)}</Text>
           </View>
         )}
-
-        <TouchableOpacity
-          style={[styles.boton, cargando && styles.botonDeshabilitado]}
-          onPress={obtenerUbicacion}
-          disabled={cargando}
-        >
-          <Text style={styles.textoBoton}>
-            {cargando ? "Obteniendo ubicación..." : "Obtener mi ubicación"}
-          </Text>
-        </TouchableOpacity>
       </View>
+
       {/* Historial de entregas */}
       <View style={[styles.card, { marginTop: 20 }]}>
         <Text style={styles.seccion}>Historial de entregas</Text>
@@ -447,5 +474,29 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#111827",
     marginTop: 8,
+  },
+
+  contenedorMapa: {
+    height: 280,
+    borderRadius: 14,
+    overflow: "hidden",
+    marginBottom: 20,
+  },
+
+  mapa: {
+    width: "100%",
+    height: "100%",
+  },
+
+  marcadorRepartidor: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#2563EB",
+    borderWidth: 3,
+    borderColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 5,
   },
 });
